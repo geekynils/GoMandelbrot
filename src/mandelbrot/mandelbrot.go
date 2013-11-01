@@ -6,7 +6,7 @@ import (
 	// "os"
 	"fmt"
 	"hsv"
-	"log"
+	// "log"
 	"time"
 	. "types"
 )
@@ -78,14 +78,12 @@ func DrawMandelbrot() {
 
 		select {
 		case state = <-inputChan:
-			log.Printf("Got state %d", state)
 		default:
 		}
 
 		if state == Play || state == StepFwd || state == StepBack {
 
 			if state == StepBack {
-				log.Printf("Step Back")
 				it--
 			} else {
 				it++
@@ -96,8 +94,6 @@ func DrawMandelbrot() {
 			for i := 0; i < width; i++ {
 				for j := 0; j < height; j++ {
 
-					// Calc the complex num for the given screen coordinates.
-					// TODO
 					real := (float64(i)/float64(width-1))*3 - 2
 					imag := (float64(j)/float64(height-1))*2 - 1
 					num := complex(real, imag)

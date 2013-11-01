@@ -6,9 +6,9 @@ import (
 	"github.com/go-gl/glfw"
 	"github.com/go-gl/gltext"
 	"log"
-	//"time"
 	"os"
 	"runtime"
+	"time"
 	. "types"
 )
 
@@ -22,7 +22,6 @@ var state State = Play
 
 func Init() {
 
-	// TODO Not sure if this is already called by GLFW.
 	runtime.LockOSThread()
 
 	// Initialize GLFW
@@ -124,6 +123,9 @@ func Run() {
 	running = true
 
 	for running {
+
+		start := time.Now()
+
 		escPressed := glfw.Key(glfw.KeyEsc)
 		windowOpen := glfw.WindowParam(glfw.Opened)
 
@@ -140,6 +142,16 @@ func Run() {
 		default: // Non blocking!
 			glfw.PollEvents()
 
+		}
+
+		// Limit to 60hz
+
+		elapsed := time.Since(start)
+
+		timeToSleep := 16*time.Millisecond - elapsed
+
+		if timeToSleep > 0 {
+			time.Sleep(timeToSleep)
 		}
 
 	}
@@ -207,7 +219,7 @@ func onChar(key, keyState int) {
 			}
 		case 102: // f
 			state = StepFwd
-		case 66: // b
+		case 98: // b
 			state = StepBack
 		default:
 			return
