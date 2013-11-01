@@ -31,7 +31,3 @@ const (
 	StepFwd
 	StepBack
 )
-
-// TODO Not a type, but still keep it here!
-
-var CurrentState State

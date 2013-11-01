@@ -28,6 +28,7 @@ func main() {
 	inputoutput.Init()
 
 	mandelbrot.LinkScreenOutput(inputoutput.ScreenOutputChan)
+	mandelbrot.LinkInput(inputoutput.InputChan)
 
 	go mandelbrot.DrawMandelbrot()
 

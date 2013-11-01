@@ -22,6 +22,12 @@ func LinkScreenOutput(channel chan *ScreenData) {
 	screenOutputChan = channel
 }
 
+var inputChan chan State
+
+func LinkInput(channel chan State) {
+	inputChan = channel
+}
+
 /* Calculates a color value from a complex number. Brightness is inverse to the
    distance from 0. Color value is dependent on the angle from the real axis,
    starting with red. */
@@ -66,11 +72,19 @@ func DrawMandelbrot() {
 
 	it := 1
 
+	state := Play
+
 	for {
 
-		if CurrentState == Play || CurrentState == StepFwd || CurrentState == StepBack {
+		select {
+		case state = <-inputChan:
+			log.Printf("Got state %d", state)
+		default:
+		}
 
-			if CurrentState == StepBack {
+		if state == Play || state == StepFwd || state == StepBack {
+
+			if state == StepBack {
 				log.Printf("Step Back")
 				it--
 			} else {
@@ -109,12 +123,10 @@ func DrawMandelbrot() {
 
 			screenOutputChan <- iterationData
 
-			if CurrentState == StepFwd || CurrentState == StepBack {
-				CurrentState = Stop
+			if state == StepFwd || state == StepBack {
+				state = Stop
 			}
 
-		} else {
-			time.Sleep(500 * time.Microsecond)
 		}
 	}
 

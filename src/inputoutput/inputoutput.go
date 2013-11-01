@@ -14,6 +14,8 @@ import (
 
 var ScreenOutputChan = make(chan *ScreenData)
 
+var InputChan = make(chan State, 100)
+
 var running = false
 
 var state State = Play
@@ -21,9 +23,7 @@ var state State = Play
 func Init() {
 
 	// TODO Not sure if this is already called by GLFW.
-	// runtime.LockOSThread()
-
-	CurrentState = Play
+	runtime.LockOSThread()
 
 	// Initialize GLFW
 
@@ -129,19 +129,17 @@ func Run() {
 
 		running = escPressed == 0 && windowOpen == 1
 
-		var data *ScreenData
-
 		select {
-		case newData := <-ScreenOutputChan:
-			data = newData
-		default: // Non blocking!
-		}
+		case data := <-ScreenOutputChan:
 
-		if data != nil {
 			drawFrame(data.Pixels)
 			// TODO nThreads
 			drawInfoBox(3, 3, 12, data.IterNr, 1, data.ExecTime)
 			glfw.SwapBuffers()
+
+		default: // Non blocking!
+			glfw.PollEvents()
+
 		}
 
 	}
@@ -199,22 +197,25 @@ func onChar(key, keyState int) {
 	log.Printf("char: %d, %d\n", key, keyState)
 
 	if keyState == glfw.KeyPress {
-		/*
-			switch key {
-			case glfw.KeySpace: // space
-				if CurrentState == Stop {
-					CurrentState = Play
-				} else {
-					CurrentState = Stop
-				}
-			case 102: // f
-				CurrentState = StepFwd
-			case 66: // b
-				CurrentState = StepBack
-			default:
-				return
 
-			}*/
+		switch key {
+		case glfw.KeySpace: // space
+			if state == Stop {
+				state = Play
+			} else {
+				state = Stop
+			}
+		case 102: // f
+			state = StepFwd
+		case 66: // b
+			state = StepBack
+		default:
+			return
+		}
+
+		log.Printf("Sending state %d", state)
+
+		InputChan <- state
 	}
 }
 
