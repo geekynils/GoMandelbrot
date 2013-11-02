@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"hsv"
 	// "log"
+	"sync"
 	"time"
 	. "types"
 )
@@ -64,6 +65,26 @@ func pointIteration(num complex128, maxIter int) complex128 {
 	return z
 }
 
+func computePart(from, to int, screenData *Screen) {
+	for i := from; i < to; i++ {
+		for j := 0; j < height; j++ {
+
+			real := (float64(i)/float64(width-1))*3 - 2
+			imag := (float64(j)/float64(height-1))*2 - 1
+			num := complex(real, imag)
+
+			// z_0 = 0
+			// z_(n+1) = z_n^2 + c
+
+			value := pointIteration(num, it)
+
+			colorValue := calculateColor(value)
+
+			screenData[i][j] = colorValue
+		}
+	}
+}
+
 func DrawMandelbrot() {
 
 	screenData := new(Screen)
@@ -72,6 +93,7 @@ func DrawMandelbrot() {
 	it := 1
 	state := Play
 	nThreads := 4
+	var wg sync.WaitGroup
 
 	for {
 
@@ -94,23 +116,14 @@ func DrawMandelbrot() {
 
 			start := time.Now()
 
-			for i := 0; i < width; i++ {
-				for j := 0; j < height; j++ {
+			partSize = width / nThreads
 
-					real := (float64(i)/float64(width-1))*3 - 2
-					imag := (float64(j)/float64(height-1))*2 - 1
-					num := complex(real, imag)
-
-					// z_0 = 0
-					// z_(n+1) = z_n^2 + c
-
-					value := pointIteration(num, it)
-
-					colorValue := calculateColor(value)
-
-					screenData[i][j] = colorValue
-				}
+			for i = 0; i < width; i += partSize {
+				wg.Add(1)
+				go computePart(i, i+partSize+1, screenData)
 			}
+
+			wg.Wait()
 
 			elapsed := time.Since(start)
 
@@ -119,6 +132,7 @@ func DrawMandelbrot() {
 			iterationData.Pixels = screenData
 			iterationData.IterNr = it
 			iterationData.ExecTime = fmt.Sprintf("%s", elapsed)
+			iterationData.NThreads = nThreads
 
 			screenOutputChan <- iterationData
 

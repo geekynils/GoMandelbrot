@@ -21,6 +21,7 @@ type ScreenData struct {
 	Pixels   *Screen
 	ExecTime string
 	IterNr   int
+	NThreads int
 }
 
 type State int
