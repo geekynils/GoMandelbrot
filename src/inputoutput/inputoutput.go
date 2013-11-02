@@ -183,7 +183,7 @@ func onResize(w, h int) {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
-	log.Printf("resized: %dx%d\n", w, h)
+	// log.Printf("resized: %dx%d\n", w, h)
 }
 
 func onClose() int {
@@ -194,19 +194,19 @@ func onClose() int {
 }
 
 func onMouseBtn(button, state int) {
-	log.Printf("mouse button: %d, %d\n", button, state)
+	// log.Printf("mouse button: %d, %d\n", button, state)
 }
 
 func onMouseWheel(delta int) {
-	log.Printf("mouse wheel: %d\n", delta)
+	// log.Printf("mouse wheel: %d\n", delta)
 }
 
 func onKey(key, state int) {
-	log.Printf("key: %d, %d\n", key, state)
+	// log.Printf("key: %d, %d\n", key, state)
 }
 
 func onChar(key, keyState int) {
-	log.Printf("char: %d, %d\n", key, keyState)
+	// log.Printf("char: %d, %d\n", key, keyState)
 
 	if keyState == glfw.KeyPress {
 
@@ -224,8 +224,6 @@ func onChar(key, keyState int) {
 		default:
 			return
 		}
-
-		log.Printf("Sending state %d", state)
 
 		InputChan <- state
 	}

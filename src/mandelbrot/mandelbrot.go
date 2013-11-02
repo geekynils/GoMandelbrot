@@ -65,20 +65,23 @@ func pointIteration(num complex128, maxIter int) complex128 {
 }
 
 func DrawMandelbrot() {
-	screenData := new(Screen)
 
+	screenData := new(Screen)
 	width := len(screenData)
 	height := len(screenData[0])
-
 	it := 1
-
 	state := Play
+	nThreads := 4
 
 	for {
 
 		select {
 		case state = <-inputChan:
 		default:
+		}
+
+		if state == StepBack && it <= 1 {
+			state = Stop
 		}
 
 		if state == Play || state == StepFwd || state == StepBack {
