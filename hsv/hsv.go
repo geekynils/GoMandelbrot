@@ -1,8 +1,8 @@
 package hsv
 
 import (
+	. "github.com/nightlifelover/GoMandelbrot/types"
 	"math"
-	. "types"
 )
 
 // TODO Rgb2hsv(..)

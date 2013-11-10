@@ -5,11 +5,11 @@ import (
 	"math/cmplx"
 	// "os"
 	"fmt"
-	"hsv"
-	// "log"
+	"github.com/nightlifelover/GoMandelbrot/hsv"
+	. "github.com/nightlifelover/GoMandelbrot/types"
+	"log"
 	"sync"
 	"time"
-	. "types"
 )
 
 const (
@@ -27,6 +27,12 @@ var inputChan chan State
 
 func LinkInput(channel chan State) {
 	inputChan = channel
+}
+
+var NThreadsChan chan int
+
+func LinkNThreads(channel chan int) {
+	NThreadsChan = channel
 }
 
 /* Calculates a color value from a complex number. Brightness is inverse to the
@@ -65,7 +71,10 @@ func pointIteration(num complex128, maxIter int) complex128 {
 	return z
 }
 
-func computePart(from, to int, screenData *Screen) {
+func computePart(from, to, width, height, it int, screenData *Screen) {
+
+	log.Printf("Computing from %d to %d", from, to)
+
 	for i := from; i < to; i++ {
 		for j := 0; j < height; j++ {
 
@@ -83,6 +92,7 @@ func computePart(from, to int, screenData *Screen) {
 			screenData[i][j] = colorValue
 		}
 	}
+
 }
 
 func DrawMandelbrot() {
@@ -90,8 +100,8 @@ func DrawMandelbrot() {
 	screenData := new(Screen)
 	width := len(screenData)
 	height := len(screenData[0])
-	it := 1
-	state := Play
+	it := 0
+	state := StepFwd
 	nThreads := 4
 	var wg sync.WaitGroup
 
@@ -99,6 +109,13 @@ func DrawMandelbrot() {
 
 		select {
 		case state = <-inputChan:
+		default:
+		}
+
+		select {
+		case newNThreads := <-NThreadsChan:
+			nThreads = newNThreads
+			log.Printf("Got %d threads", nThreads)
 		default:
 		}
 
@@ -116,14 +133,27 @@ func DrawMandelbrot() {
 
 			start := time.Now()
 
-			partSize = width / nThreads
+			partSize := width / nThreads
 
-			for i = 0; i < width; i += partSize {
+			k := 0
+			for i := 0; i < width-partSize+1; i += partSize {
 				wg.Add(1)
-				go computePart(i, i+partSize+1, screenData)
+
+				go func(from, to int) {
+
+					rStart := time.Now()
+					computePart(from, to, width, height, it, screenData)
+					wg.Done()
+					rDuration := time.Since(rStart)
+					log.Printf("Thread %d took %s.", k, rDuration)
+					k++
+				}(i, i+partSize)
+
 			}
 
 			wg.Wait()
+
+			log.Println("Done computing.")
 
 			elapsed := time.Since(start)
 
@@ -139,8 +169,6 @@ func DrawMandelbrot() {
 			if state == StepFwd || state == StepBack {
 				state = Stop
 			}
-
 		}
 	}
-
 }

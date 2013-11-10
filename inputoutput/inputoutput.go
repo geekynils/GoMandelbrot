@@ -5,12 +5,14 @@ import (
 	"github.com/go-gl/gl"
 	"github.com/go-gl/glfw"
 	"github.com/go-gl/gltext"
+	. "github.com/nightlifelover/GoMandelbrot/types"
 	"log"
 	"os"
 	"runtime"
 	"time"
-	. "types"
 )
+
+var NThreadsChan = make(chan int, 100)
 
 var ScreenOutputChan = make(chan *ScreenData)
 
@@ -135,8 +137,7 @@ func Run() {
 		case data := <-ScreenOutputChan:
 
 			drawFrame(data.Pixels)
-			// TODO nThreads
-			drawInfoBox(3, 3, 12, data.IterNr, 1, data.ExecTime)
+			drawInfoBox(3, 3, 12, data.IterNr, data.NThreads, data.ExecTime)
 			glfw.SwapBuffers()
 
 		default: // Non blocking!
@@ -210,22 +211,31 @@ func onChar(key, keyState int) {
 
 	if keyState == glfw.KeyPress {
 
-		switch key {
-		case glfw.KeySpace: // space
-			if state == Stop {
-				state = Play
-			} else {
-				state = Stop
-			}
-		case 102: // f
-			state = StepFwd
-		case 98: // b
-			state = StepBack
-		default:
-			return
-		}
+		nThreadsMap := map[int]int{49: 1, 50: 2, 52: 4, 56: 8}
 
-		InputChan <- state
+		nThreads, threadNumInput := nThreadsMap[key]
+
+		if threadNumInput {
+			NThreadsChan <- nThreads
+			log.Printf("sending %d threads", nThreads)
+		} else {
+
+			switch key {
+			case glfw.KeySpace: // space
+				if state == Stop {
+					state = Play
+				} else {
+					state = Stop
+				}
+				InputChan <- state
+			case 102: // f
+				state = StepFwd
+				InputChan <- state
+			case 98: // b
+				state = StepBack
+				InputChan <- state
+			}
+		}
 	}
 }
 
